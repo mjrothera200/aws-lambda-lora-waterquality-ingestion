@@ -9,10 +9,36 @@ async function decode(deviceid, payload, writeClient) {
         // base 64 decode
         // Create a buffer from the string
         let bufferObj = Buffer.from(payload, "base64");
-        let decodedString = bufferObj.toString("utf8");
-        //
-        var values = decodedString.toString().split(',');
+        //let decodedString = bufferObj.toString("utf8");
+        
+        console.log(bufferObj.toString('hex'))
+
+        // Parse out the values
+        values = []
+
+        // Battery 
+        const battery = ((bufferObj[0]<<8 | bufferObj[1])&0x7fff)/1000
+        console.log(`battery: ${battery}`)
+        const temp_c = (bufferObj[3]*256+bufferObj[4])/100
+        console.log(`temp c: ${temp_c}`)
+        const temp_f = ((temp_c * 9)/5)+32
+        console.log(`temp f: ${temp_f}`)
+        values.push(temp_f)
+        // 5 & 6 are reserved and correspond to register 0
+        const ec=(bufferObj[7]*256+bufferObj[8])
+        console.log(`ec: ${ec} us/cm`)
+        values.push(ec)
+        const salinity = (bufferObj[9]*256+bufferObj[10])
+        console.log(`salinity: ${salinity} mg/L`)
+        values.push(salinity)
+        const tds = (bufferObj[11]*256+bufferObj[12])
+        console.log(`tds: ${tds} mg/L`)
+        values.push(tds)
+
+        values.push(battery)
+
         result = await process(deviceid, values, writeClient)
+
         return result
     } catch (e) {
         console.log('e', e);
@@ -88,6 +114,19 @@ async function process(deviceid, values, writeClient) {
     };
 
     records.push(record4);
+    counter++
+
+    value = (values[4].toString().trim().length > 0) ? parseFloat(values[4].toString()) : 0.0;
+    const record5 = {
+        'Dimensions': dimensions,
+        'MeasureName': 'battery1',
+        'MeasureValue': value.toString(),
+        'MeasureValueType': 'DOUBLE',
+        'Time': timestamp.toString(),
+        'Version': version
+    };
+
+    records.push(record5);
     counter++
 
 

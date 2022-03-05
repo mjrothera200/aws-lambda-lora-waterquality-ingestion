@@ -57,7 +57,7 @@ exports.handler = async (event, context, callback) => {
         console.log("Processing. ")
 
         // Testing for now - get the real payload!
-        const result = await waterQuality.decode(deviceid, "MzguMiwxMi41LDI1LDY3", writeClient)
+        const result = await waterQuality.decode(deviceid, payload, writeClient)
       
 
     } catch (error) {
